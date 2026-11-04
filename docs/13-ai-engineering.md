@@ -283,3 +283,11 @@ O prompt ativo passa a `copilot-v2.5`. O texto do `v2.4` permanece em `SYSTEM_AN
 A tela deixa de usar só “resposta mock” quando a geração OpenAI caiu no fallback. O cartão passa a separar “Geração: OpenAI”, “Resposta exibida: fallback determinístico” e “Motivo: validação de evidências”. Provider mock de verdade continua “resposta mock”. Falha de infraestrutura continua com o próprio motivo.
 
 Não houve chamada à OpenAI nem Eval pago nesta fase. O comportamento do modelo com o `v2.5` não está medido.
+
+## 2026-11-03 — Smoke real do copilot-v2.5, fase 13.8
+
+A fase 13.7 ajustou as instruções do contrato de citações. Esta fase fez uma única pergunta pelo frontend `/copiloto`, com a OpenAI real, no período padrão e em todas as unidades. Não houve Eval e não houve segunda tentativa.
+
+O health estava em `provider` `openai`, modelo configurado `gpt-4.1-mini` e prompt `copilot-v2.5`. O `POST /api/v1/ai/ask` respondeu HTTP 200. O modelo ecoado foi `gpt-4.1-mini-2025-04-14`. `evidenceStatus` ficou `supported`. `generationProvider` e `responseProvider` ficaram `openai`. Não houve fallback: `fallbackReason` nulo e `citationFailures` vazio. Entraram 5.418 tokens e saíram 370. A latência total foi 6.471 ms. As ferramentas foram `get_summary`, `get_unit_metrics` e `get_insights`. O trace é `7c0d4ea7-076f-4bda-a605-9f0bd00a0371`.
+
+A resposta identificou a Norte, com 96,13% de pendências vencidas, 1.762 de 1.833, e citou E8, E9, E10 e E11 na mesma frase. O guardrail aceitou essa execução. Isso comprova uma resposta generativa aprovada numa passagem real. Não comprova taxa de aprovação do `copilot-v2.5`. O último resultado sistemático continua o do Eval do `copilot-v2.4`: 3/4 aprovações generativas, 4/4 de schema e 1/1 de injeção bloqueada.

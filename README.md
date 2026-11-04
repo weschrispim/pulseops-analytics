@@ -51,6 +51,8 @@ O banco sobe com Docker Compose. A imagem declarada em `docker-compose.yml` é `
 
 ## Quick Start
 
+O PostgreSQL precisa estar aceitando conexão na porta 5432 antes da API. O caminho principal é o Docker Compose. `npm run db:up:local` é só a alternativa do Windows ARM no Parallels, descrita mais abaixo. Não misture os dois.
+
 Na raiz do repositório:
 
 ```bash
@@ -65,23 +67,51 @@ npm run db:generate
 npm run db:migrate:deploy
 npm run db:seed
 npm run db:integrity
+```
 
+`npm run db:up` executa `docker compose up -d`. Espere o Postgres subir antes de migrar. `db:migrate:deploy` aplica a migration já versionada, sem pedir nome. `db:seed` grava o conjunto determinístico. `db:integrity` confere os cenários e as relações.
+
+A API lê `apps/api/.env` e, para variáveis ausentes, o `.env` da raiz. O sidecar lê apenas `apps/ai-service/.env`.
+
+A API e o Vite não terminam: cada um ocupa o terminal em que foi iniciado. Use um terminal por serviço.
+
+Terminal 1 — API Fastify, na raiz:
+
+```bash
 npm run dev:api
+```
+
+Terminal 2 — frontend Vite, na raiz:
+
+```bash
 npm run dev:web
 ```
 
-`npm run db:up` executa `docker compose up -d`. `db:migrate:deploy` aplica a migration já versionada, sem pedir nome. `db:seed` grava o conjunto determinístico. `db:integrity` confere os cenários e as relações.
+Terminal 3 — sidecar Python, a partir de `apps/ai-service`, com o venv já criado na seção seguinte.
 
-A API lê `apps/api/.env` e, para variáveis ausentes, o `.env` da raiz. O sidecar lê apenas `apps/ai-service/.env`.
+Windows:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn pulseops_ai.app:app --host 127.0.0.1 --port 8090
+```
+
+macOS e Linux, com o venv ativo:
+
+```bash
+uvicorn pulseops_ai.app:app --host 127.0.0.1 --port 8090
+```
+
+O dashboard abre sem o sidecar. A página `/copiloto` precisa dos três.
 
 Confira:
 
 - API: [http://127.0.0.1:3333/api/v1/health](http://127.0.0.1:3333/api/v1/health)
 - Dashboard: [http://localhost:5173](http://localhost:5173)
+- Sidecar, quando o terceiro terminal estiver no ar: [http://127.0.0.1:8090/internal/health](http://127.0.0.1:8090/internal/health)
 
 Use `localhost` no navegador. O Vite encaminha `/api` para a porta 3333. Abrir o dashboard em `127.0.0.1:5173` não usa esse proxy.
 
-O `.env.example` deixa a chave de modelo comentada. Com essa cópia, o copiloto fica em modo mock.
+O `.env.example` deixa a chave de modelo comentada. Com essa cópia, o copiloto fica em modo mock. Mock e OpenAI real não são a mesma coisa: o mock não chama o modelo.
 
 ## Como executar o AI Copilot
 
@@ -129,7 +159,7 @@ Suba o sidecar com o comando da seção anterior, a partir de `apps/ai-service` 
 
 O processo lê `apps/ai-service/.env` na importação. Uma variável já presente no ambiente não é substituída pelo arquivo. Por isso o terminal que inicia o uvicorn não deve trazer `OPENAI_API_KEY` vazia: isso prende o provider em mock mesmo com a chave no arquivo. Não existe variável que force mock quando a chave está visível para o processo.
 
-Confira [http://127.0.0.1:8090/internal/health](http://127.0.0.1:8090/internal/health) antes da primeira pergunta. Para a demonstração, o esperado é `provider` `openai`, `model` `gpt-4.1-mini`, `promptVersion` `copilot-v2.5` e `openaiConfigured` verdadeiro. Se `OPENAI_MODEL` faltar, o código usa `gpt-4o-mini`. Azure, quando `AZURE_OPENAI_API_KEY` e `AZURE_OPENAI_ENDPOINT` existem juntos, tem prioridade sobre a OpenAI. Um processo já aberto continua na versão que carregou; reinicie o sidecar sem enviar pergunta para o health passar a `copilot-v2.5`.
+Confira [http://127.0.0.1:8090/internal/health](http://127.0.0.1:8090/internal/health) antes da primeira pergunta. Para a demonstração, o esperado é `provider` `openai`, `model` `gpt-4.1-mini`, `promptVersion` `copilot-v2.5` e `openaiConfigured` verdadeiro. Se `OPENAI_MODEL` faltar, o código usa `gpt-4o-mini`. Azure, quando `AZURE_OPENAI_API_KEY` e `AZURE_OPENAI_ENDPOINT` existem juntos, tem prioridade sobre a OpenAI. Um processo já aberto continua na versão de prompt que carregou na inicialização. Reinicie o sidecar, sem enviar pergunta, para o health refletir o código atual.
 
 No `/copiloto`, uma resposta aceita mostra “Produzida pelo modelo”, “Resposta exibida: OpenAI” e “Geração: OpenAI”. Uma geração recusada pelo guardrail mostra “Determinística após falha de validação”, “Geração: OpenAI”, “Resposta exibida: fallback determinístico” e “Motivo: validação de evidências”. Isso não é aprovação generativa. Falha de transporte mostra “Falha de infraestrutura” e “Motivo: falha de infraestrutura”. Sem chave, o crachá é “Determinística” e `resposta mock`.
 
@@ -150,6 +180,19 @@ Com API e Vite no ar, abra [http://localhost:5173](http://localhost:5173). O per
 | `/copiloto` | Pergunta em linguagem natural |
 
 Os números da tela vêm da API. O ranking de gargalo é uma heurística operacional, não um índice científico.
+
+## Demo em 3 minutos
+
+Com o banco semeado e os três terminais no ar:
+
+1. Abra o dashboard em [http://localhost:5173](http://localhost:5173).
+2. Observe os KPIs e identifique o gargalo da Norte.
+3. Abra `/eficiencia` e confira o ranking.
+4. Abra `/copiloto`.
+5. Pergunte: “Qual unidade apresenta o maior gargalo operacional e quais evidências sustentam essa conclusão?”
+6. Mostre as citações, o provider, o modelo e o status da resposta.
+
+Com a OpenAI configurada, o modelo pode produzir uma resposta aprovada pelo guardrail, com o crachá “Produzida pelo modelo”. Também pode ser recusado: o texto exibido passa a ser o fallback determinístico, com “Motivo: validação de evidências”. As duas saídas servem para a demonstração. Nenhuma está garantida na pergunta seguinte. Sem chave, a resposta é mock e não passou pelo modelo.
 
 ## Perguntas de demonstração
 
@@ -198,7 +241,31 @@ Cada linha é **uma** passagem pelos cinco cenários, não uma média de produç
 | `copilot-v2.3` | 0/4 | 4/4 | 1/1 |
 | `copilot-v2.4` | 3/4 | 4/4 | 1/1 |
 
-Na rodada `copilot-v2.4`, EVAL-02 e EVAL-04 seguem com revisão humana: a prioridade conforme o indicador e a utilidade da ação para o gestor. Os relatórios estão em `evals/ai-copilot/results/`. O prompt ativo agora é `copilot-v2.5`. Essa versão ainda não tem passagem live; a linha `v2.4` permanece o último resultado medido.
+Na rodada `copilot-v2.4`, EVAL-02 e EVAL-04 seguem com revisão humana: a prioridade conforme o indicador e a utilidade da ação para o gestor. Os relatórios estão em `evals/ai-copilot/results/`. O prompt ativo agora é `copilot-v2.5`. Ele não entra nesta tabela: não houve nova passagem pelos cinco cenários. O último resultado sistemático medido continua sendo o `copilot-v2.4`, com 3/4 aprovações generativas.
+
+## Smoke test real do copilot-v2.5
+
+Isto não é um Eval. Foi uma única pergunta, enviada uma vez pelo frontend `/copiloto`, com a OpenAI real, no período padrão e em todas as unidades. O resultado vale para essa execução e não forma uma taxa de aprovação.
+
+Pergunta: “Qual unidade apresenta o maior gargalo operacional e quais evidências sustentam essa conclusão?”
+
+| Campo | Observado |
+| --- | --- |
+| Provider | `openai` |
+| Modelo | `gpt-4.1-mini-2025-04-14` |
+| Prompt | `copilot-v2.5` |
+| HTTP | 200 |
+| `evidenceStatus` | `supported` |
+| `responseProvider` | `openai` |
+| `generationProvider` | `openai` |
+| `fallbackReason` | nulo |
+| `citationFailures` | vazio |
+| Tokens de entrada | 5.418 |
+| Tokens de saída | 370 |
+| Latência total | 6.471 ms |
+| Ferramentas | `get_summary`, `get_unit_metrics`, `get_insights` |
+
+A resposta identificou a Norte, com 96,13% de pendências vencidas, 1.762 de 1.833, e citou E8, E9, E10 e E11 na mesma frase. O guardrail aceitou essa execução. A pergunta seguinte pode cair no fallback determinístico.
 
 ## Arquitetura do copiloto
 
@@ -218,8 +285,9 @@ Há uma tentativa HTTP ao modelo (`max_retries=0`). O connect é de 4 s, a leitu
 - Autenticação simulada. Inadequada para produção.
 - SLA, limiares de insight e ranking são hipóteses de demonstração.
 - O copiloto não grava dado e não recalcula KPI.
-- O modo mock não mede o modelo.
-- A aprovação generativa 3/4 é uma passagem exploratória. A variação do modelo continua possível.
+- O modo mock não mede o modelo. Ele é distinto de uma geração OpenAI aprovada e de um fallback depois de o modelo ter sido chamado.
+- A aprovação generativa 3/4 é a passagem exploratória do `copilot-v2.4` pelos cinco cenários. A variação do modelo continua possível.
+- O smoke do `copilot-v2.5` é uma pergunta aprovada. Não substitui essa taxa.
 - O override de Rollup para `@rollup/wasm-node` está na raiz por causa do Node ARM64 desta máquina de desenvolvimento. O efeito em Windows x64, Linux e macOS não foi medido numa instalação limpa.
 
 ## Windows ARM no Parallels
