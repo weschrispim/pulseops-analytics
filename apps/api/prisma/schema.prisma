@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OccurrenceType {
+  MISSING_PUNCH
+  DUPLICATE_PUNCH
+  OUT_OF_GEOFENCE
+  SHIFT_MISMATCH
+  MANUAL_ADJUSTMENT
+}
+
+enum OccurrenceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum Criticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Organization {
+  id         String     @id @db.Uuid
+  name       String
+  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+  units      Unit[]
+  employees  Employee[]
+  occurrences Occurrence[]
+}
+
+model Unit {
+  id             String     @id @db.Uuid
+  organizationId String     @db.Uuid
+  code           String
+  name           String
+  createdAt      DateTime   @default(now()) @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  employees      Employee[]
+  occurrences    Occurrence[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Employee {
+  id             String     @id @db.Uuid
+  organizationId String     @db.Uuid
+  unitId         String     @db.Uuid
+  externalCode   String
+  fullName       String
+  active         Boolean    @default(true)
+  createdAt      DateTime   @default(now()) @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  unit           Unit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  occurrences    Occurrence[]
+
+  @@unique([organizationId, externalCode])
+  @@index([organizationId, unitId])
+}
+
+model Occurrence {
+  id             String           @id @db.Uuid
+  organizationId String           @db.Uuid
+  unitId         String           @db.Uuid
+  employeeId     String           @db.Uuid
+  type           OccurrenceType
+  status         OccurrenceStatus
+  criticality    Criticality
+  openedAt       DateTime         @db.Timestamptz(3)
+  resolvedAt     DateTime?        @db.Timestamptz(3)
+  slaDueAt       DateTime         @db.Timestamptz(3)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  unit           Unit             @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  employee       Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, openedAt])
+  @@index([organizationId, status, slaDueAt])
+  @@index([organizationId, unitId, openedAt])
+  @@index([organizationId, criticality])
+  @@index([organizationId, unitId, status])
+}

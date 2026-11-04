@@ -1,0 +1,41 @@
+{
+  "name": "pulseops-analytics",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PulseOps Analytics — monorepo MVP (npm workspaces)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @pulseops/api",
+    "dev:web": "npm run dev -w @pulseops/web",
+    "build": "npm run build -w @pulseops/shared && npm run build -w @pulseops/api && npm run build -w @pulseops/web",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:up:local": "node apps/api/scripts/local-postgres.mjs",
+    "db:generate": "npm run prisma:generate -w @pulseops/api",
+    "db:migrate": "npm run prisma:migrate -w @pulseops/api",
+    "db:migrate:deploy": "npm run prisma:migrate:deploy -w @pulseops/api",
+    "db:seed": "npm run prisma:seed -w @pulseops/api",
+    "db:integrity": "npm run seed:integrity -w @pulseops/api",
+    "db:reset": "npm run prisma:migrate:reset -w @pulseops/api"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@4.67.4"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true
+  }
+}

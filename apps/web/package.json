@@ -1,0 +1,36 @@
+{
+  "name": "@pulseops/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --experimental-strip-types --test src/lib/search.test.ts src/lib/format.test.ts src/lib/insight-link.test.ts src/lib/copilot-request.test.ts src/lib/copilot-origin.test.ts src/lib/ranking.test.ts"
+  },
+  "dependencies": {
+    "@pulseops/shared": "*",
+    "@radix-ui/react-tooltip": "^1.4.1",
+    "@rollup/wasm-node": "^4.67.4",
+    "@tailwindcss/vite": "^4.3.4",
+    "@tanstack/react-query": "^5.105.3",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.67.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.5",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "rollup": "npm:@rollup/wasm-node@^4.52.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1"
+  }
+}

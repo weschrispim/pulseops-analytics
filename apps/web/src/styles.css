@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-background: #0b1214;
+  --color-foreground: #e8eef0;
+  --color-card: #121c20;
+  --color-muted: #b7c9cf;
+  --color-border: #24383e;
+  --color-primary: #2a9d8f;
+  --color-primary-foreground: #04221e;
+  --color-success: #3cba7a;
+  --color-warning: #e0a84a;
+  --color-danger: #e06a5a;
+  --color-info: #6cb6c9;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 420px at 0% -10%, rgb(42 157 143 / 0.12), transparent 55%),
+    var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise {
+  animation: rise 280ms ease;
+}
+
+input[type="date"] {
+  color-scheme: dark;
+}

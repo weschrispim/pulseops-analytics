@@ -1,0 +1,40 @@
+{
+  "datasetVersion": "v1",
+  "mode": "live-gateway",
+  "resultSource": "aborted-before-scoring",
+  "promptVersion": "copilot-v2.3",
+  "modelConfigured": "gpt-4.1-mini",
+  "completed": false,
+  "gatewayTimeoutMs": 30000,
+  "runnerExit": "RuntimeError: Gateway recusou o caso (502).",
+  "casesNotSent": ["EVAL-02", "EVAL-03", "EVAL-04", "EVAL-05"],
+  "cases": [
+    {
+      "evalId": "EVAL-01",
+      "question": "Qual unidade apresenta o maior gargalo operacional?",
+      "traceId": "bf00b20f-fba2-414a-a0e8-c2e553c62c24",
+      "promptVersion": "copilot-v2.3",
+      "tools": ["get_summary", "get_unit_metrics", "get_insights"],
+      "generationProvider": "openai",
+      "generationModel": null,
+      "responseProvider": "mock",
+      "evidenceStatus": "fallback",
+      "schemaResult": "not_applicable",
+      "metricsResult": "not_applicable",
+      "groundingResult": "not_scored",
+      "causalityResult": "not_scored",
+      "hypothesisResult": "not_scored",
+      "citationFailures": [],
+      "fallbackReason": "A chamada ao modelo falhou (APIConnectionError). A resposta exibida é o compositor mock.",
+      "deliveredToGateway": false,
+      "gatewayStatus": 502,
+      "gatewayLatencyMs": 30092.19,
+      "inputTokens": null,
+      "outputTokens": null,
+      "generationLatencyMs": 123069.82,
+      "totalLatencyMs": 124177.69,
+      "estimatedCostUsd": null,
+      "generativeApproval": false
+    }
+  ]
+}

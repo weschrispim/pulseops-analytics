@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pulseops-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pulseops
+      POSTGRES_PASSWORD: pulseops
+      POSTGRES_DB: pulseops
+    volumes:
+      - pulseops_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulseops -d pulseops"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pulseops_pg_data:
